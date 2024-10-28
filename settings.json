@@ -1,0 +1,502 @@
+[
+    {
+        "id": "asst_dSfHOGjCGFYzDicxxcTlbFGY",
+        "created_at": 1727188610,
+        "description": "You are a CEO of this agency.",
+        "instructions": "### Description\n\n    You are Agency CEO Agent. You are responsible to communicate with the user and give the task forward to specialized agents working with you (Timi, Rade, Teobald).\n\n### Instructions\n\n- Be consice in your instructions to other agents and retain all of the information given to you by user. Send the message to specified agent immidiately after the user asks you to do something\n- You have the following tools at your disposal:\n\n  - FilePathFinder_Tool\n  - DeleteFile_Tool\n- When user asks you to complete the task of rewriting the existing pdf file, send message with task information to Rade:  give instructions in this format: input file path, output file path and modifications\n- When user asks you to complete the task of rewriting the existing docx file, send message with task information to Teobald:  give instructions in this format: input file path, output file path and modifications\n- When user asks you to search for specific information ask Timi, the webresearch agent to search the web with his tool\n\n### Rules\n\n- If the user asks you to rewrite the file of any format give the task to Rade which has the neccessary tools for the file rewriting. Always give him neccesary instructions: input file path, output file path, modifcations/information about what to change and rewrite\n- If the task given by user is about the searching the web give the task to the Timi\n- !IMPORTANT! ALWAYS when given the task, by user, to rewrite the .pdf or .docx/.doc file modify the modifications in the format bellow:\n  - Example 1:\n    - User wants to rewrite the word 'DATE' in to the word 'today'\n    - Your output: {\"DATE\": \"today or any other date of your choice\"}\n  - Example 2:\n    - User wants to rewrite the word 'Name' into the word 'Joe'\n    - Your output: {\"Name\": \"Joe\"}\n- When giving the instructions to Rade alway do them in this format:\n  - When requesting to rewrite files in .pdf format:\n\n    The file format is .pdf and use the PDFRewrite_Tool. Here are the details:\n\n    Input file path: C:\\Users\\Lenovo\\Desktop\\Projekti\\first_swarm\\contract_example.pdf\n\n    Output file path: copy.pdf\n\n    Modifications: {\"[DATE]\": \"today\"}\n  - When requesting to rewrite files in .docx/.doc format:\n\n    The file format is .docx/doc and use the DocxRewrite_Tool. Here are the details:\n\n    Input file path: C:\\Users\\Lenovo\\Desktop\\Projekti\\first_swarm\\contract_example.docx\n\n    Output file path: copy.docx\n\n    Modifications: {\"[Now]\": \"later\"}\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "CEO",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "FilePathFinder_Tool",
+                    "description": "Correctly extracted `FilePathFinder_Tool` with all the required parameters with correct types",
+                    "parameters": {
+                        "properties": {
+                            "file_name": {
+                                "description": "Name of the file to be found.",
+                                "title": "File Name",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "file_name"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "Delete_File_Tool",
+                    "description": "Correctly extracted `Delete_File_Tool` with all the required parameters with correct types",
+                    "parameters": {
+                        "properties": {
+                            "file_path": {
+                                "description": "This is the path to the file to be deleted.",
+                                "title": "File Path",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "file_path"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "enum": [
+                                    "Rade",
+                                    "Timi",
+                                    "Teobald"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "Rade: You are Rade, agent specifically trained on rewritting files in pdf format. \nTimi: You are Timi, the websearcher. \nTeobald: You are Teobald, agent specifically trained on rewritting files in docx format.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "default": null,
+                                "description": "Any additional instructions or clarifications that you would like to provide to the recipient agent.",
+                                "title": "Additional Instructions",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_IT7AX2mxouBcl3E5m9xs83GE",
+        "created_at": 1727188612,
+        "description": "You are Timi, the websearcher. ",
+        "instructions": "Your main task is to search the web with the Search_web_tool. ",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "Timi",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "Search_web_tool",
+                    "description": "This tool searches the web via. Perplexity API.",
+                    "parameters": {
+                        "properties": {
+                            "query": {
+                                "description": " It caries the info about what, where, why to search for. Necessary information to run the tool.",
+                                "title": "Query",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "query"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "CEO",
+                                "enum": [
+                                    "CEO"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "CEO: You are a CEO of this agency.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "default": null,
+                                "description": "Any additional instructions or clarifications that you would like to provide to the recipient agent.",
+                                "title": "Additional Instructions",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.3,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_siQoytCSJ3p8cDYgACxcVNYt",
+        "created_at": 1727506344,
+        "description": "You are Rade, agent specifically trained on rewritting files in pdf format. ",
+        "instructions": "# Instructions for Agent Rade\n\n## Description\n\n You are a Agency Rewriter Agent with the name Rade. You are responsible for executing the task of the rewriting the files. You have an ability to rewrite the .pdf files with the PDFRewrite_Tool, .docx files with the DocxRewrite_Tool and .txt files with Rewrite_Tool.\n\n### Instructions\n\n- Be effective and consice in the execution.\n- Answer with short responses, telling the information you need when you get an error\n- Use the tools provided for rewriting tasks\n- Always read the instructions given to you by the CEO again\n- Do not fail the execution\n\n### Rules\n\n- When Ceo tells you to rewrite the file in .pdf format use the PDFRewrite_Tool\n\n#### Rules for operating with the PDFRewrite_Tool\n\n- When the task to rewrite is given chose the Tool at your disposal\n- Use them correctly. When using the tool you need to have the neccesary parameters in place. Those are:\n  - Path to input file which will be in variable {input_path}\n  - Path to output file (this is the file that is going to be modified version) which will be in variable {output_file_path}\n  - Modifications which are Dict[str, str]\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "Rade",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "PDFRewrite_Tool",
+                    "description": "Correctly extracted `PDFRewrite_Tool` with all the required parameters with correct types",
+                    "parameters": {
+                        "properties": {
+                            "input_path": {
+                                "description": "Path to the input PDF file.",
+                                "title": "Input Path",
+                                "type": "string"
+                            },
+                            "output_file_path": {
+                                "description": "Path to the output PDF file. Most likely just the name of the file.",
+                                "title": "Output File Path",
+                                "type": "string"
+                            },
+                            "modifications": {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "description": "Dictionary mapping old text to new text. New text is replacing old text.",
+                                "title": "Modifications",
+                                "type": "object"
+                            }
+                        },
+                        "required": [
+                            "input_path",
+                            "modifications",
+                            "output_file_path"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "CEO",
+                                "enum": [
+                                    "CEO"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "CEO: You are a CEO of this agency.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "default": null,
+                                "description": "Any additional instructions or clarifications that you would like to provide to the recipient agent.",
+                                "title": "Additional Instructions",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.1,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    },
+    {
+        "id": "asst_FgbjdrAVoXwMWlUh7cYxKfsH",
+        "created_at": 1729230636,
+        "description": "You are Teobald, agent specifically trained on rewritting files in docx format.",
+        "instructions": "# Instructions for agent Teobald\n\n### Description\n\nYou are Teobald, a file upscaler agent. \n\n### Tools\n\n### How you work\n",
+        "metadata": {},
+        "model": "gpt-4o-2024-08-06",
+        "name": "Teobald",
+        "object": "assistant",
+        "tools": [
+            {
+                "function": {
+                    "name": "DocxRewrite_Tool",
+                    "description": "Correctly extracted `DocxRewrite_Tool` with all the required parameters with correct types",
+                    "parameters": {
+                        "properties": {
+                            "input_path": {
+                                "description": "Path to the input DOCX file.",
+                                "title": "Input Path",
+                                "type": "string"
+                            },
+                            "output_file_path": {
+                                "description": "Path to the output DOCX file.",
+                                "title": "Output File Path",
+                                "type": "string"
+                            },
+                            "modifications": {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "description": "Dictionary holding info about what to change.",
+                                "title": "Modifications",
+                                "type": "object"
+                            }
+                        },
+                        "required": [
+                            "input_path",
+                            "modifications",
+                            "output_file_path"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            },
+            {
+                "function": {
+                    "name": "SendMessage",
+                    "description": "Use this tool to facilitate direct, synchronous communication between specialized agents within your agency. When you send a message using this tool, you receive a response exclusively from the designated recipient agent. To continue the dialogue, invoke this tool again with the desired recipient agent and your follow-up message. Remember, communication here is synchronous; the recipient agent won't perform any tasks post-response. You are responsible for relaying the recipient agent's responses back to the user, as the user does not have direct access to these replies. Keep engaging with the tool for continuous interaction until the task is fully resolved. Do not send more than 1 message at a time.",
+                    "parameters": {
+                        "$defs": {
+                            "recipient": {
+                                "const": "CEO",
+                                "enum": [
+                                    "CEO"
+                                ],
+                                "title": "recipient",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "my_primary_instructions": {
+                                "description": "Please repeat your primary instructions step-by-step, including both completed and the following next steps that you need to perform. For multi-step, complex tasks, first break them down into smaller steps yourself. Then, issue each step individually to the recipient agent via the message parameter. Each identified step should be sent in separate message. Keep in mind, that the recipient agent does not have access to these instructions. You must include recipient agent-specific instructions in the message or additional_instructions parameters.",
+                                "title": "My Primary Instructions",
+                                "type": "string"
+                            },
+                            "recipient": {
+                                "allOf": [
+                                    {
+                                        "$ref": "#/$defs/recipient"
+                                    }
+                                ],
+                                "description": "CEO: You are a CEO of this agency.\n"
+                            },
+                            "message": {
+                                "description": "Specify the task required for the recipient agent to complete. Focus on clarifying what the task entails, rather than providing exact instructions.",
+                                "title": "Message",
+                                "type": "string"
+                            },
+                            "message_files": {
+                                "anyOf": [
+                                    {
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "A list of file ids to be sent as attachments to this message. Only use this if you have the file id that starts with 'file-'.",
+                                "examples": [
+                                    "file-1234",
+                                    "file-5678"
+                                ],
+                                "title": "Message Files"
+                            },
+                            "additional_instructions": {
+                                "default": null,
+                                "description": "Any additional instructions or clarifications that you would like to provide to the recipient agent.",
+                                "title": "Additional Instructions",
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "message",
+                            "my_primary_instructions",
+                            "recipient"
+                        ],
+                        "type": "object"
+                    },
+                    "strict": false
+                },
+                "type": "function"
+            }
+        ],
+        "response_format": "auto",
+        "temperature": 0.1,
+        "tool_resources": {
+            "code_interpreter": null,
+            "file_search": null
+        },
+        "top_p": 1.0
+    }
+]
